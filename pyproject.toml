@@ -47,4 +47,4 @@ dev = [
 ]
 
 [tool.setuptools]
-package-dir = {"wavtokenizer" = "src"}
+package-dir = {"" = "src"}
