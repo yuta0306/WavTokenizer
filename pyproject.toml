@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "wavtokenizer"
 description = "SOTA discrete acoustic codec models with 40 tokens per second for audio language modeling"
-version = "1.0.0"
+version = "0.0.3"
 dependencies = [
     "transformers",
     "torch >= 2.1.0",
@@ -47,4 +47,4 @@ dev = [
 ]
 
 [tool.setuptools]
-package-dir = {"wavtokenizer" = ""}
+package-dir = {"wavtokenizer" = "src"}

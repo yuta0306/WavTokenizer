@@ -1,13 +1,13 @@
+import os
 from typing import Tuple, Any, Union, Dict
 
 import torch
 import yaml
 from huggingface_hub import hf_hub_download
 from torch import nn
-from decoder.feature_extractors import FeatureExtractor, EncodecFeatures
-from decoder.heads import FourierHead
-from decoder.models import Backbone
-from decoder.discriminators import MultiPeriodDiscriminator, MultiResolutionDiscriminator
+from src.decoder.feature_extractors import FeatureExtractor, EncodecFeatures
+from src.decoder.heads import FourierHead
+from src.decoder.models import Backbone
 
 
 def instantiate_class(args: Union[Any, Tuple[Any, ...]], init: Dict[str, Any]) -> Any:
@@ -38,51 +38,60 @@ class WavTokenizer(nn.Module):
     """
 
     def __init__(
-        self, feature_extractor: FeatureExtractor, backbone: Backbone, head: FourierHead,
-            multiperioddisc: MultiPeriodDiscriminator, multiresddisc: MultiResolutionDiscriminator,
+        self,
+        feature_extractor: FeatureExtractor,
+        backbone: Backbone,
+        head: FourierHead,
     ):
         super().__init__()
         self.feature_extractor = feature_extractor
         self.backbone = backbone
         self.head = head
 
-        self.multiperioddisc = multiperioddisc
-        self.multiresddisc = multiresddisc
-
     @classmethod
-    def from_hparams0828(cls, config_path: str) -> "Vocos":
+    def from_hparams(cls, config_path: str) -> "Vocos":
         """
         Class method to create a new Vocos model instance from hyperparameters stored in a yaml configuration file.
         """
         with open(config_path, "r") as f:
             config = yaml.safe_load(f)
-        feature_extractor = instantiate_class(args=(), init=config['model']['init_args']["feature_extractor"])
-        backbone = instantiate_class(args=(), init=config['model']['init_args']["backbone"])
-        head = instantiate_class(args=(), init=config['model']['init_args']["head"])
-        model = cls(feature_extractor=feature_extractor, backbone=backbone, head=head,
-                    multiperioddisc=MultiPeriodDiscriminator(num_embeddings=4),
-                    multiresddisc=MultiResolutionDiscriminator(num_embeddings=4))
+        feature_extractor = instantiate_class(args=(), init=config["feature_extractor"])
+        backbone = instantiate_class(args=(), init=config["backbone"])
+        head = instantiate_class(args=(), init=config["head"])
+        model = cls(feature_extractor=feature_extractor, backbone=backbone, head=head)
         return model
 
     @classmethod
-    def from_pretrained0828(self, config_path, model_path):
+    def from_pretrained(self, repo_id: str, nframes: int = 75) -> "Vocos":
         """
         Class method to create a new Vocos model instance from a pre-trained model stored in the Hugging Face model hub.
         """
-        model = self.from_hparams0828(config_path)
-        state_dict_raw = torch.load(model_path, map_location="cpu")['state_dict']
-        state_dict = dict()
-        for k, v in state_dict_raw.items():
-            if k.startswith('backbone.') or k.startswith('head.') or k.startswith('feature_extractor.') \
-                    or k.startswith('multiperioddisc.') or k.startswith('multiresddisc.'):
-                state_dict[k] = v
-        # if isinstance(model.feature_extractor, EncodecFeatures):
-        #     encodec_parameters = {
-        #         "feature_extractor.encodec." + key: value
-        #         for key, value in model.feature_extractor.encodec.state_dict().items()
-        #     }
-        #     state_dict.update(encodec_parameters)
-        model.load_state_dict(state_dict)
+        name_map = {
+            "config": {
+                40: "wavtokenizer_smalldata_frame40_3s_nq1_code4096_dim512_kmeans200_attn.yaml",
+                75: "wavtokenizer_smalldata_frame75_3s_nq1_code4096_dim512_kmeans200_attn.yaml",
+            },
+            "model": {
+                40: "WavTokenizer_small_600_24k_4096.ckpt",
+                75: "WavTokenizer_small_320_24k_4096.ckpt",
+            },
+        }
+        config_path = hf_hub_download(
+            repo_id=repo_id, filename=name_map["config"][nframes]
+        )
+        model_path = hf_hub_download(
+            repo_id=repo_id, filename=name_map["model"][nframes]
+        )
+        model = self.from_hparams0802(config_path)
+        state_dict = torch.load(model_path, map_location="cpu")["state_dict"]
+        if isinstance(model.feature_extractor, EncodecFeatures):
+            encodec_parameters = {
+                "feature_extractor.encodec." + key: value
+                for key, value in model.feature_extractor.encodec.state_dict().items()
+            }
+            state_dict.update(encodec_parameters)
+        model.load_state_dict(state_dict, strict=False)
+        model.eval()
         return model
 
     @classmethod
@@ -92,9 +101,13 @@ class WavTokenizer(nn.Module):
         """
         with open(config_path, "r") as f:
             config = yaml.safe_load(f)
-        feature_extractor = instantiate_class(args=(), init=config['model']['init_args']["feature_extractor"])
-        backbone = instantiate_class(args=(), init=config['model']['init_args']["backbone"])
-        head = instantiate_class(args=(), init=config['model']['init_args']["head"])
+        feature_extractor = instantiate_class(
+            args=(), init=config["model"]["init_args"]["feature_extractor"]
+        )
+        backbone = instantiate_class(
+            args=(), init=config["model"]["init_args"]["backbone"]
+        )
+        head = instantiate_class(args=(), init=config["model"]["init_args"]["head"])
         model = cls(feature_extractor=feature_extractor, backbone=backbone, head=head)
         return model
 
@@ -104,10 +117,14 @@ class WavTokenizer(nn.Module):
         Class method to create a new Vocos model instance from a pre-trained model stored in the Hugging Face model hub.
         """
         model = self.from_hparams0802(config_path)
-        state_dict_raw = torch.load(model_path, map_location="cpu")['state_dict']
+        state_dict_raw = torch.load(model_path, map_location="cpu")["state_dict"]
         state_dict = dict()
         for k, v in state_dict_raw.items():
-            if k.startswith('backbone.') or k.startswith('head.') or k.startswith('feature_extractor.'):
+            if (
+                k.startswith("backbone.")
+                or k.startswith("head.")
+                or k.startswith("feature_extractor.")
+            ):
                 state_dict[k] = v
         # if isinstance(model.feature_extractor, EncodecFeatures):
         #     encodec_parameters = {
@@ -115,6 +132,51 @@ class WavTokenizer(nn.Module):
         #         for key, value in model.feature_extractor.encodec.state_dict().items()
         #     }
         #     state_dict.update(encodec_parameters)
+        model.load_state_dict(state_dict)
+        model.eval()
+        return model
+
+    @classmethod
+    def from_pretrained0911(self, config_path, model_folder_path):
+        """
+        Class method to create a new Vocos model instance from a pre-trained model stored in the Hugging Face model hub.
+        """
+        model = self.from_hparams0802(config_path)
+
+        models = os.listdir(model_folder_path)
+        val_loss = []
+        for item in models:
+            if not item.startswith("vocos_"):
+                continue
+            val_loss.append(item[-11:-5])
+        val_loss.sort()
+        val_loss = val_loss[:3]  # 取前3性能较好的模型平均
+        state_dict = dict()
+        state_dicts = []
+        for item in models:
+            if not item.startswith("vocos_"):
+                continue
+            ll = item[-11:-5]
+            if ll not in val_loss:
+                continue
+            model_path = model_folder_path + "/" + item
+            state_dict_raw = torch.load(model_path, map_location="cpu")["state_dict"]
+            state_dict_single = dict()
+            for k, v in state_dict_raw.items():
+                if (
+                    k.startswith("backbone.")
+                    or k.startswith("head.")
+                    or k.startswith("feature_extractor.")
+                ):
+                    state_dict_single[k] = v
+            state_dicts.append(state_dict_single)
+        for kk in state_dicts[0].keys():
+            vv = state_dicts[0][kk]
+            for i in range(1, len(state_dicts)):
+                ss = state_dicts[i]
+                vv += ss[kk]
+            vm = vv / len(state_dicts)
+            state_dict[kk] = vm
         model.load_state_dict(state_dict)
         model.eval()
         return model
@@ -137,13 +199,19 @@ class WavTokenizer(nn.Module):
         audio_output = self.decode(features, **kwargs)
         return audio_output
 
-
     # 0818
     @torch.inference_mode()
     def encode(self, audio_input: torch.Tensor, **kwargs: Any) -> torch.Tensor:
-        features, _, _ = self.feature_extractor(audio_input, **kwargs)
-        return features
+        features, discrete_codes, _ = self.feature_extractor(audio_input, **kwargs)
+        return features, discrete_codes
 
+    # 0818
+    @torch.inference_mode()
+    def encode_infer(self, audio_input: torch.Tensor, **kwargs: Any) -> torch.Tensor:
+        features, discrete_codes, _ = self.feature_extractor.infer(
+            audio_input, **kwargs
+        )
+        return features, discrete_codes
 
     @torch.inference_mode()
     def decode(self, features_input: torch.Tensor, **kwargs: Any) -> torch.Tensor:
@@ -186,7 +254,13 @@ class WavTokenizer(nn.Module):
         n_bins = self.feature_extractor.encodec.quantizer.bins
         offsets = torch.arange(0, n_bins * len(codes), n_bins, device=codes.device)
         embeddings_idxs = codes + offsets.view(-1, 1, 1)
-        features = torch.nn.functional.embedding(embeddings_idxs, self.feature_extractor.codebook_weights).sum(dim=0)
+
+        tmp = torch.cat(
+            [vq.codebook for vq in self.feature_extractor.encodec.quantizer.vq.layers],
+            dim=0,
+        )
+        # features = torch.nn.functional.embedding(embeddings_idxs, self.feature_extractor.codebook_weights).sum(dim=0)
+        features = torch.nn.functional.embedding(embeddings_idxs, tmp).sum(dim=0)
         features = features.transpose(1, 2)
 
         return features
