@@ -29,27 +29,28 @@ conda activate wavtokenizer
 pip install -r requirements.txt
 ```
 
+You can install via pip:
+
+```bash
+pip install git+https://github.com/yuta0306/WavTokenizer.git
+```
+
 ## Infer
 
 ### Part1: Reconstruct audio from raw wav
 
 ```python
 
-from encoder.utils import convert_audio
+from wavtokenizer.encoder.utils import convert_audio
 import torchaudio
 import torch
-from decoder.pretrained import WavTokenizer
+from wavtokenizer.decoder.pretrained import WavTokenizer
 
 
 device=torch.device('cpu')
 
-config_path = "./configs/xxx.yaml"
-model_path = "./xxx.ckpt"
-audio_outpath = "xxx"
-
-wavtokenizer = WavTokenizer.from_pretrained0802(config_path, model_path)
+wavtokenizer = WavTokenizer.from_pretrained("novateur/WavTokenizer")
 wavtokenizer = wavtokenizer.to(device)
-
 
 wav, sr = torchaudio.load(audio_path)
 wav = convert_audio(wav, sr, 24000, 1) 
@@ -64,17 +65,14 @@ torchaudio.save(audio_outpath, audio_out, sample_rate=24000, encoding='PCM_S', b
 ### Part2: Generating discrete codecs
 ```python
 
-from encoder.utils import convert_audio
+from wavtokenizer.encoder.utils import convert_audio
 import torchaudio
 import torch
-from decoder.pretrained import WavTokenizer
+from wavtokenizer.decoder.pretrained import WavTokenizer
 
 device=torch.device('cpu')
 
-config_path = "./configs/xxx.yaml"
-model_path = "./xxx.ckpt"
-
-wavtokenizer = WavTokenizer.from_pretrained0802(config_path, model_path)
+wavtokenizer = WavTokenizer.from_pretrained("novateur/WavTokenizer")
 wavtokenizer = wavtokenizer.to(device)
 
 wav, sr = torchaudio.load(audio_path)
@@ -98,14 +96,14 @@ audio_out = wavtokenizer.decode(features, bandwidth_id=bandwidth_id)
 ## Available models
 🤗 links to the Huggingface model hub.
 
-| Model name                                                          |                                                                                                            HuggingFace                                                                                                             |  Corpus  |  Token/s  | Domain | Open-Source |
-|:--------------------------------------------------------------------|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:--------:|:---------:|:----------:|:------:|
-| WavTokenizer-small-600-24k-4096             |             [🤗](https://huggingface.co/novateur/WavTokenizer/blob/main/WavTokenizer_small_600_24k_4096.ckpt)    | LibriTTS  | 40  |  Speech  | √ |
-| WavTokenizer-small-320-24k-4096             |             [🤗](https://huggingface.co/novateur/WavTokenizer/blob/main/WavTokenizer_small_320_24k_4096.ckpt)     | LibriTTS  | 75 |  Speech  | √|
-| WavTokenizer-medium-600-24k-4096               |               [🤗](https://github.com/jishengpeng/wavtokenizer)         | 10000 Hours | 40  |  Speech, Audio, Music  | Coming Soon|
-| WavTokenizer-medium-320-24k-4096                 |               [🤗](https://github.com/jishengpeng/wavtokenizer)         | 10000 Hours | 75 |  Speech, Audio, Music  | Coming Soon|
-| WavTokenizer-large-600-24k-4096 | [🤗](https://github.com/jishengpeng/wavtokenizer) | 80000 Hours | 40 |   Speech, Audio, Music   | Coming Soon|
-| WavTokenizer-large-320-24k-4096   | [🤗](https://github.com/jishengpeng/wavtokenizer) | 80000 Hours | 75 |   Speech, Audio, Music   | Coming Soon |
+| Model name                       |                                           HuggingFace                                            |   Corpus    | Token/s |        Domain        | Open-Source |
+| :------------------------------- | :----------------------------------------------------------------------------------------------: | :---------: | :-----: | :------------------: | :---------: |
+| WavTokenizer-small-600-24k-4096  | [🤗](https://huggingface.co/novateur/WavTokenizer/blob/main/WavTokenizer_small_600_24k_4096.ckpt) |  LibriTTS   |   40    |        Speech        |      √      |
+| WavTokenizer-small-320-24k-4096  | [🤗](https://huggingface.co/novateur/WavTokenizer/blob/main/WavTokenizer_small_320_24k_4096.ckpt) |  LibriTTS   |   75    |        Speech        |      √      |
+| WavTokenizer-medium-600-24k-4096 |                         [🤗](https://github.com/jishengpeng/wavtokenizer)                         | 10000 Hours |   40    | Speech, Audio, Music | Coming Soon |
+| WavTokenizer-medium-320-24k-4096 |                         [🤗](https://github.com/jishengpeng/wavtokenizer)                         | 10000 Hours |   75    | Speech, Audio, Music | Coming Soon |
+| WavTokenizer-large-600-24k-4096  |                         [🤗](https://github.com/jishengpeng/wavtokenizer)                         | 80000 Hours |   40    | Speech, Audio, Music | Coming Soon |
+| WavTokenizer-large-320-24k-4096  |                         [🤗](https://github.com/jishengpeng/wavtokenizer)                         | 80000 Hours |   75    | Speech, Audio, Music | Coming Soon |
 
       
 
