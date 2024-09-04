@@ -4,10 +4,10 @@ import torch
 import torchaudio
 from torch import nn
 import math
-from src.decoder.modules import safe_log
-from src.encoder.modules import SEANetEncoder, SEANetDecoder
-from src.encoder import EncodecModel
-from src.encoder.quantization import ResidualVectorQuantizer
+from wavtokenizer.decoder.modules import safe_log
+from wavtokenizer.encoder.modules import SEANetEncoder, SEANetDecoder
+from wavtokenizer.encoder import EncodecModel
+from wavtokenizer.encoder.quantization import ResidualVectorQuantizer
 
 
 class FeatureExtractor(nn.Module):

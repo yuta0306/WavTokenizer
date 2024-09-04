@@ -7,25 +7,25 @@ import torchaudio
 import transformers
 import yaml
 
-from src.decoder.discriminator_dac import DACDiscriminator
+from wavtokenizer.decoder.discriminator_dac import DACDiscriminator
 
-from src.decoder.discriminators import (
+from wavtokenizer.decoder.discriminators import (
     MultiPeriodDiscriminator,
     MultiResolutionDiscriminator,
 )
-from src.decoder.feature_extractors import FeatureExtractor
-from src.decoder.heads import FourierHead
-from src.decoder.helpers import plot_spectrogram_to_numpy
-from src.decoder.loss import (
+from wavtokenizer.decoder.feature_extractors import FeatureExtractor
+from wavtokenizer.decoder.heads import FourierHead
+from wavtokenizer.decoder.helpers import plot_spectrogram_to_numpy
+from wavtokenizer.decoder.loss import (
     DiscriminatorLoss,
     GeneratorLoss,
     FeatureMatchingLoss,
     MelSpecReconstructionLoss,
     DACGANLoss,
 )
-from src.decoder.models import Backbone
-from src.decoder.modules import safe_log
-from src.decoder.pretrained_model import instantiate_class
+from wavtokenizer.decoder.models import Backbone
+from wavtokenizer.decoder.modules import safe_log
+from wavtokenizer.decoder.pretrained_model import instantiate_class
 
 
 class VocosExp(pl.LightningModule):

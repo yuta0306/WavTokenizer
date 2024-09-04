@@ -4,10 +4,10 @@ import torch
 import yaml
 from huggingface_hub import hf_hub_download
 from torch import nn
-from src.decoder.feature_extractors import FeatureExtractor, EncodecFeatures
-from src.decoder.heads import FourierHead
-from src.decoder.models import Backbone
-from src.decoder.discriminators import (
+from wavtokenizer.decoder.feature_extractors import FeatureExtractor, EncodecFeatures
+from wavtokenizer.decoder.heads import FourierHead
+from wavtokenizer.decoder.models import Backbone
+from wavtokenizer.decoder.discriminators import (
     MultiPeriodDiscriminator,
     MultiResolutionDiscriminator,
 )
