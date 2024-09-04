@@ -59,21 +59,31 @@ class WavTokenizer(nn.Module):
         return model
 
     @classmethod
-    def from_pretrained(self, repo_id: str) -> "Vocos":
+    def from_pretrained(self, repo_id: str, nframes: int = 75) -> "Vocos":
         """
         Class method to create a new Vocos model instance from a pre-trained model stored in the Hugging Face model hub.
         """
-        config_path = hf_hub_download(repo_id=repo_id, filename="config.yaml")
-        model_path = hf_hub_download(repo_id=repo_id, filename="pytorch_model.bin")
-        model = self.from_hparams(config_path)
-        state_dict = torch.load(model_path, map_location="cpu")
+        name_map = {
+            "config": {
+                40: "wavtokenizer_smalldata_frame40_3s_nq1_code4096_dim512_kmeans200_attn.yaml",
+                75: "wavtokenizer_smalldata_frame75_3s_nq1_code4096_dim512_kmeans200_attn.yaml",
+            },
+            "model": {
+                40: "WavTokenizer_small_600_24k_4096.ckpt",
+                75: "WavTokenizer_small_320_24k_4096.ckpt",
+            },
+        }
+        config_path = hf_hub_download(repo_id=repo_id, filename=name_map["config"][nframes])
+        model_path = hf_hub_download(repo_id=repo_id, filename=name_map["model"][nframes])
+        model = self.from_hparams0802(config_path)
+        state_dict = torch.load(model_path, map_location="cpu")["state_dict"]
         if isinstance(model.feature_extractor, EncodecFeatures):
             encodec_parameters = {
                 "feature_extractor.encodec." + key: value
                 for key, value in model.feature_extractor.encodec.state_dict().items()
             }
             state_dict.update(encodec_parameters)
-        model.load_state_dict(state_dict)
+        model.load_state_dict(state_dict, strict=False)
         model.eval()
         return model
 
