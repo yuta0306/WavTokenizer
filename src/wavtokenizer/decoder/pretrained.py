@@ -84,14 +84,16 @@ class WavTokenizer(nn.Module):
             repo_id=repo_id, filename=name_map["model"][nframes]
         )
         model = self.from_hparams0802(config_path)
-        state_dict = torch.load(model_path, map_location="cpu")["state_dict"]
-        if isinstance(model.feature_extractor, EncodecFeatures):
-            encodec_parameters = {
-                "feature_extractor.encodec." + key: value
-                for key, value in model.feature_extractor.encodec.state_dict().items()
-            }
-            state_dict.update(encodec_parameters)
-        model.load_state_dict(state_dict, strict=False)
+        state_dict_raw = torch.load(model_path, map_location="cpu")["state_dict"]
+        state_dict = dict()
+        for k, v in state_dict_raw.items():
+            if (
+                k.startswith("backbone.")
+                or k.startswith("head.")
+                or k.startswith("feature_extractor.")
+            ):
+                state_dict[k] = v
+        model.load_state_dict(state_dict)
         model.eval()
         return model
 
